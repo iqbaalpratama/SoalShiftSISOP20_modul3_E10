@@ -1,6 +1,7 @@
 # SoalShiftSISOP20_modul3_E10
 
 **Soal 4**
+
 4a.1. Buatlah program C dengan nama "4a.c", yang berisi program untuk
 melakukan perkalian matriks. Ukuran matriks pertama adalah 4x2, dan
 matriks kedua 2x5. Isi dari matriks didefinisikan di dalam kodingan. Matriks
@@ -186,6 +187,7 @@ void *multiplier(void *arg) {
 Dari setiap id thread dicek untuk menjalankan tugasnya yaitu menghitung dan menyimpan nilai hasil perkalian dari setiap kolom. Untuk perkaliannya, seperti matriks pada umumnya yaitu misal untuk menghitung nilai matriks hasil pada elemen (1,1) maka caranya elemen (1,1) Matriks 1  *  elemen (1,1) Matriks 2 + elemen (1,2) Matriks 1 * elemen (2,1) Matriks 2 
 
 **Soal 3 :**
+
 Buatlah sebuah program dari C untuk mengkategorikan file. Program ini akan
 memindahkan file sesuai ekstensinya (tidak case sensitive. JPG dan jpg adalah
 sama) ke dalam folder sesuai ekstensinya yang folder hasilnya terdapat di working
