@@ -514,6 +514,98 @@ int main(int argc, char const *argv[]) {
 		exit(0);
 	}
 }
-``
+```
 
 **Penjelasan :**
+```c
+void *hitung (void * arg)
+```
+fungsi ini berfungsi untuk melakakukan sortir file hingga memindahakannya ke folder masing - masing. Penjelasan setiap bagiannya sebagai berikut :
+``` c
+int is_dir(const char* path) {
+	struct stat buf;
+	stat(path, &buf);
+	return S_ISDIR(buf.st_mode);
+}
+
+if (!is_dir(arg)){
+	strcpy(kopian, arg);
+	token = strtok(kopian, "/");
+
+	while( token != NULL ) {
+		arr[n] = token;
+		n++;
+		token = strtok(NULL, "/");	
+	}
+```
+is_dir adalah fungsi untuk melakukan pemeriksaan apkah suatu input itu adalaha directory atau bukan, pada is_dir sendiri kita menyimpan hasil stat (semua informasi tentang inputan kita) kemudian kita ambil bagian st_mode (mode ini memiliki return value tertentu untuk file dan folder). Kemudian, setelah melakukan pengecekan, lanjut melakukan pemotongan string dengan strtok untuk mendapatkan setiap kata yang dipisah dengan "/". Semisal ada kalimat /home/apagitu/main.c,  arr[n] yang merupakan array 2 dimensi akan melakukan penyimpanan seperti berikut :
+```
+arr[0] = home
+arr[1] = apagitu
+arr[2] = main.c
+```
+Tapi sebelumnya path asli harus tetap ada (karena strtok memotong string asli), sehingga kita buat kopiannya lalu dipotong kopiannya itu. Setelah selesai pemotongan string pertama akan dilanjut pemotongan string tahap kedua untuk bagian main.c, potongan kodenya seperti berikut :
+```c
+strcpy(temp, arr[n-1]);
+//printf("%s", temp);
+token2 = strtok(temp, ".");
+
+while( token2 != NULL ) {
+	arrs[n2] = token2;
+	n2++;
+	token2 = strtok(NULL, ".");
+}
+```
+Untuk bagian pertama, hasil dari arr[n-1] yaitu main.c diduplikat pada temp lalu dilakukan pemotongan string  berdasarkan titik. Sehingga pada arrs akan berisi seperti berikut 
+```c
+arrs[0] = main;
+arrs[1] = c;
+```
+Dari arrs tersebut kita ambil bagian ekstensinya, karena dari soal tidak mempermasalahkan *case sensitive* maka kami buat *lowercase* semua dengan fungsi tolower.
+```c
+strcpy(ektensi, arrs[n2-1]);
+for(int i=0 ; i<strlen(ektensi) ;i++){
+	ektensi[i] = tolower(ektensi[i]);
+}
+```
+Setelah mendapatkan ekstensi (lowercsase) selanjutnya kita buat folder sesuai ekstensi yang kita dapat dengan fungsi mkdir() dengan parameter pathnya (concat dari /home/syubban/ dan ektensi) dan permission. Ketika n2 == 2 (ada ekstensi) maka buat folder sesuai ekstensi, selain itu buat folder Unknown. 
+```c
+strcpy(tempo, "/home/syubban/");
+
+if(n2 == 2) {
+	strcpy(directory, arrs[n2-1]);
+	strcat(tempo, directory);
+	// printf("%s\n", tempo);
+	mkdir(tempo, 0777);	
+}else {
+	strcpy(directory, "Unknown");
+	strcat(tempo, directory);
+	// printf("%s\n", tempo);
+	mkdir(tempo, 0777);
+}
+
+// printf("%s\n", tempo);
+
+// printf("%s", directory);
+
+int ch;
+FILE *pf1, *pf2;
+pf1 = fopen(arg, "r");
+// printf("%s\n", argv[i]);
+// printf("%s", aa);
+strcat(tempo, "/");
+strcat(strcat(strcat(tempo, arrs[n2-2]), "."), ektensi);
+// printf("%s\n", tempo);
+// printf("%s", directory);
+
+pf2 = fopen(tempo, "w");
+while ((ch = fgetc(pf1)) != EOF) {
+	fputc(ch, pf2);
+}
+
+remove(arg);
+// Close file
+fclose(pf1);
+fclose(pf2);
+```
+Setelah pembuatan folder selesai, langkah selanjutnya adalah pemindahan file-file ke folder-folder yang bersesuaian.
