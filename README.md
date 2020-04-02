@@ -1,500 +1,5 @@
 # SoalShiftSISOP20_modul3_E10
 
-**Soal 4**
-
-4a.
-1. Buatlah program C dengan nama "4a.c", yang berisi program untuk
-melakukan perkalian matriks. Ukuran matriks pertama adalah 4x2, dan
-matriks kedua 2x5. Isi dari matriks didefinisikan di dalam kodingan. Matriks
-nantinya akan berisi angka 1-20 (tidak perlu dibuat filter angka).
-4a.
-2. Tampilkan matriks hasil perkalian tadi ke layar.
-4b.
-1. Buatlah program C kedua dengan nama "4b.c". Program ini akan
-mengambil variabel hasil perkalian matriks dari program "4a.c" (program
-sebelumnya), dan tampilkan hasil matriks tersebut ke layar.
-(Catatan!: gunakan shared memory)
-4b.
-2. Setelah ditampilkan, berikutnya untuk setiap angka dari matriks
-tersebut, carilah nilai faktorialnya, dan tampilkan hasilnya ke layar dengan
-format seperti matriks.
-
-Contoh: misal array [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], ...],
-
-maka:
-
-1 2 6 24
-120 720 ... ...
-...
-
-(Catatan! : Harus menggunakan Thread dalam penghitungan
-faktorial)
-4c.1. Buatlah program C ketiga dengan nama "4c.c". Program ini tidak
-memiliki hubungan terhadap program yang lalu.
-4c.2. Pada program ini, Norland diminta mengetahui jumlah file dan
-folder di direktori saat ini dengan command "ls | wc -l". Karena sudah belajar
-IPC, Norland mengerjakannya dengan semangat.
-(Catatan! : Harus menggunakan IPC Pipes)
-
-**Source code nomor 4a:**
-```c
-#include<stdio.h>
-#include<string.h>
-#include<pthread.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/wait.h>
-#include <sys/ipc.h> 
-#include <sys/shm.h> 
-
-pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
-int arrays1[4][2], arrays2[2][5];
-int (*arrays3)[5], size=1, size1=1;
-void *multiplier(void *arg) {
-    pthread_t id = pthread_self();
-    if(pthread_equal(id, tid[0]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][4] = (arrays1[i][0]*arrays2[0][4]) + (arrays1[i][1]*arrays2[1][4]);
-        }
-    }
-    else if(pthread_equal(id, tid[1]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][3] = (arrays1[i][0]*arrays2[0][3]) + (arrays1[i][1]*arrays2[1][3]);
-        }
-    }
-    else if(pthread_equal(id, tid[2]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][2] = (arrays1[i][0]*arrays2[0][2]) + (arrays1[i][1]*arrays2[1][2]);
-        }
-    }
-    else if(pthread_equal(id, tid[3]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][1] = (arrays1[i][0]*arrays2[0][1]) + (arrays1[i][1]*arrays2[1][1]);    
-        }
-    }
-    else 
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][0] = (arrays1[i][0]*arrays2[0][0]) + (arrays1[i][1]*arrays2[1][0]);
-        }
-    }
-}
-
-int main()
-{
-    key_t key = 1234;
-    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-    arrays3 =  shmat(shmid,NULL,0);  
-    int k=0, err;
-    
-    printf("Matriks 1:\n");
-    for(int i=0; i<4; i++)
-    {
-        for(int j=0; j<2 ;j++)
-        {
-            arrays1[i][j] = size;
-            printf("%d ", arrays1[i][j]);
-            size++;
-        }
-        printf("\n");
-    }
-    printf("\nMatriks2:\n");
-    for(int i=0; i<2; i++)
-    {
-        for(int j=0; j<5 ;j++){
-            arrays2[i][j] = size1;
-            printf("%d ", arrays2[i][j]);
-            size1++;
-        }
-        printf("\n");
-    }
-    printf("\n");
-
-    while(k<5)
-    {
-        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
-        if(err != 0){
-            printf("Can't create thread : [%s]\n", strerror(err));
-        }else{
-            //printf("Crate thread success\n");
-        }
-        k++;
-    }
-    pthread_join(tid[0], NULL);
-    pthread_join(tid[1], NULL);
-    pthread_join(tid[2], NULL);
-    pthread_join(tid[3], NULL);
-    pthread_join(tid[4], NULL);
-    
-    printf("Matriks hasil:\n");
-    for(int i=0; i<4; i++){
-        for(int k=0; k<5; k++)
-        {
-            printf("%d ", arrays3[i][k]);
-        }
-        printf("\n");
-    }
-    shmdt(arrays3);
-    exit(0);
-    return 0;
-}
-```
-Penjelasan source code no 4a:
-Untuk soal no 4a digunakan thread sebanyak 5, yaitu dimana setiap thread digunakan untuk menghitung hasil perkalian dari setiap kolom matriks, dimana dideklarasikan juga ukuran matriks yang dikalikan, matriks hasil seperti berikut, matriks hasil disini menggunakan pointer karena akan digunakan dalam shared memory. Digunakan juga variabel size dan size1 untuk membantu deklarasi nilai elemen matriks
-```c
-int arrays1[4][2], arrays2[2][5];
-int (*arrays3)[5], size=1, size1=1;``
-```
-Kemudian ada fungsi multiplier yang merupakan fungsi yg menjalankan tugas masing-masing thread 
-```c
-void *multiplier(void *arg) {
-    pthread_t id = pthread_self();
-    if(pthread_equal(id, tid[0]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][4] = (arrays1[i][0]*arrays2[0][4]) + (arrays1[i][1]*arrays2[1][4]);
-        }
-    }
-    else if(pthread_equal(id, tid[1]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][3] = (arrays1[i][0]*arrays2[0][3]) + (arrays1[i][1]*arrays2[1][3]);
-        }
-    }
-    else if(pthread_equal(id, tid[2]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][2] = (arrays1[i][0]*arrays2[0][2]) + (arrays1[i][1]*arrays2[1][2]);
-        }
-    }
-    else if(pthread_equal(id, tid[3]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][1] = (arrays1[i][0]*arrays2[0][1]) + (arrays1[i][1]*arrays2[1][1]);    
-        }
-    }
-    else 
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][0] = (arrays1[i][0]*arrays2[0][0]) + (arrays1[i][1]*arrays2[1][0]);
-        }
-    }
-}
-```
-Dari setiap id thread dicek untuk menjalankan tugasnya yaitu menghitung dan menyimpan nilai hasil perkalian dari setiap kolom. Untuk perkaliannya, seperti matriks pada umumnya yaitu misal untuk menghitung nilai matriks hasil pada elemen (1,1) maka caranya elemen (1,1) Matriks 1  *  elemen (1,1) Matriks 2 + elemen (1,2) Matriks 1 * elemen (2,1) Matriks 2 
-```
-key_t key = 1234;
-int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-arrays3 =  shmat(shmid,NULL,0);  
-```
-Kode diatas yaitu digunakan untuk deklarasi shared memory yang akan digunakan untuk mendapatkan hasil dari array perkalian matriks untuk ditampilkan di nomor selanjutnya. key digunakan sebagai parameter dalam shmget. shmget sendiri akan mereturn identifier untuk shared memory, int[4][5] dalam parameter digunakan sebagai acuan ukuran variabel yang ada di shared memory (array hasil perkalian matriks). Dan setelah identifier shared memory didapat,variabel diattach ke shared memory identifier tadi dengan menggunakan shmat. 
-
-```c
-printf("Matriks 1:\n");
-    for(int i=0; i<4; i++)
-    {
-        for(int j=0; j<2 ;j++)
-        {
-            arrays1[i][j] = size;
-            printf("%d ", arrays1[i][j]);
-            size++;
-        }
-        printf("\n");
-    }
-    printf("\nMatriks2:\n");
-    for(int i=0; i<2; i++)
-    {
-        for(int j=0; j<5 ;j++){
-            arrays2[i][j] = size1;
-            printf("%d ", arrays2[i][j]);
-            size1++;
-        }
-        printf("\n");
-    }
-    printf("\n");
- ```
- Kode tersebut untuk mencetak matriks yang dikalikan.
- ```c
-  while(k<5)
-    {
-        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
-        if(err != 0){
-            printf("Can't create thread : [%s]\n", strerror(err));
-        }else{
-            //printf("Crate thread success\n");
-        }
-        k++;
-    }
-    pthread_join(tid[0], NULL);
-    pthread_join(tid[1], NULL);
-    pthread_join(tid[2], NULL);
-    pthread_join(tid[3], NULL);
-    pthread_join(tid[4], NULL);
- ```
-Kemudian untuk kode diatas, yaitu untuk menjalankan thread dimana menggunakan perulangan while sejumlah (banyak thread - 1) serta fungsi multiplier yang sudah dibuat sebelumnya. Setelah dijalankan, maka semua thread dijoin dengan perintah pthread_join 
-```c
-printf("Matriks hasil:\n");
-    for(int i=0; i<4; i++){
-        for(int k=0; k<5; k++)
-        {
-            printf("%d ", arrays3[i][k]);
-        }
-        printf("\n");
-    }
- ```
-Kode tersebut digunakan untuk mencetak matriks hasil perkalian.
-Kemudian kode berikut, yaitu shmdt digunakan untuk mendetach variabel dari shared memory. dan exit(0) digunakan untuk keluar dari program
- ```
- shmdt(arrays3);
- exit(0);
- ```
- **Source code nomor 4b:**
- ```c
- #include <sys/ipc.h> 
-#include <sys/shm.h> 
-#include <stdio.h> 
-#include<string.h>
-#include<pthread.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/wait.h>
-pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 3 thread)
-pid_t child;
-int controller = 0;
-
-int arrayshasil[4][5];
-int (*arrays3)[5],size=1, size1=1;
-
-void *multiplier(void *arg) 
-{
-    pthread_t id = pthread_self();
-    if(pthread_equal(id, tid[0]))
-    {
-        for (int i=0; i<4; i++) 
-        {
-             for(int j=1; j<=(int)arrays3[i][4]; j++)
-             {
-                 arrayshasil[i][4]+=j;
-             }
-        }
-    }
-    else if(pthread_equal(id, tid[1]))
-    {
-        for (int i=0; i<4; i++) 
-        {
-             for(int j=1; j<=(int)arrays3[i][3]; j++)
-             {
-                 arrayshasil[i][3]+=j;
-             }
-        }
-    }
-    else if(pthread_equal(id, tid[2]))
-    {
-        for (int i=0; i<4; i++) 
-        {
-             for(int j=1; j<=(int)arrays3[i][2]; j++)
-             {
-                 arrayshasil[i][2]+=j;
-             }
-        }
-    }
-    else if(pthread_equal(id, tid[3]))
-    {
-        for (int i=0; i<4; i++) 
-        {
-             for(int j=1; j<=(int)arrays3[i][1]; j++)
-             {
-                 arrayshasil[i][1]+=j;
-             }
-        }
-    }
-    else 
-    {
-        for (int i=0; i<4; i++) 
-        {
-             for(int j=1; j<=(int)arrays3[i][0]; j++)
-             {
-                 arrayshasil[i][0]+=j;
-             }
-        }
-    }
-}
-
-int main() 
-{
-    int k=0, err;
-    for(int i=0;i<4;i++)
-    {
-        for(int j=0;j<5;j++)
-        {
-            arrayshasil[i][j]=0;
-        }
-    } 
-    // ftok to generate unique key 
-     key_t key = 1234;
-
-    // shmget returns an identifier in shmid 
-    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-  
-    // shmat to attach to shared memory 
-    arrays3 =  shmat(shmid,NULL,0);  
-    printf("Matriks hasil:\n");
-    for(int i=0; i<4; i++){
-        for(int k=0; k<5; k++)
-        {
-            printf("%d ", arrays3[i][k]);
-        }
-        printf("\n");
-    }
-    while(k<5)
-    {
-        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
-        if(err != 0){
-            printf("Can't create thread : [%s]\n", strerror(err));
-        }else{
-            //printf("Crate thread success\n");
-        }
-        k++;
-    }
-    pthread_join(tid[0], NULL);
-    pthread_join(tid[1], NULL);
-    pthread_join(tid[2], NULL);
-    pthread_join(tid[3], NULL);
-    pthread_join(tid[4], NULL);
-
-    printf("\nMatriks Penjumlahan:\n");
-    for(int i=0; i<4; i++){
-        for(int k=0; k<5; k++)
-        {
-            printf("%d ", arrayshasil[i][k]);
-        }
-        printf("\n");
-    }
-
-    shmdt(arrays3); 
-    
-    // destroy the shared memory 
-    shmctl(shmid,IPC_RMID,NULL); 
-
-    return 0; 
-} 
-```
-enjelasan source code no 4a:
-Untuk soal no 4a digunakan thread sebanyak 5, yaitu dimana setiap thread digunakan untuk menghitung hasil perkalian dari setiap kolom matriks, dimana dideklarasikan juga ukuran matriks yang dikalikan, matriks hasil seperti berikut, matriks hasil disini menggunakan pointer karena akan digunakan dalam shared memory. Digunakan juga variabel size dan size1 untuk membantu deklarasi nilai elemen matriks
-```c
-int arrays1[4][2], arrays2[2][5];
-int (*arrays3)[5], size=1, size1=1;``
-```
-Kemudian ada fungsi multiplier yang merupakan fungsi yg menjalankan tugas masing-masing thread 
-```c
-void *multiplier(void *arg) {
-    pthread_t id = pthread_self();
-    if(pthread_equal(id, tid[0]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][4] = (arrays1[i][0]*arrays2[0][4]) + (arrays1[i][1]*arrays2[1][4]);
-        }
-    }
-    else if(pthread_equal(id, tid[1]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][3] = (arrays1[i][0]*arrays2[0][3]) + (arrays1[i][1]*arrays2[1][3]);
-        }
-    }
-    else if(pthread_equal(id, tid[2]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][2] = (arrays1[i][0]*arrays2[0][2]) + (arrays1[i][1]*arrays2[1][2]);
-        }
-    }
-    else if(pthread_equal(id, tid[3]))
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][1] = (arrays1[i][0]*arrays2[0][1]) + (arrays1[i][1]*arrays2[1][1]);    
-        }
-    }
-    else 
-    {
-        for (int i=0; i<4; i++) {
-            arrays3[i][0] = (arrays1[i][0]*arrays2[0][0]) + (arrays1[i][1]*arrays2[1][0]);
-        }
-    }
-}
-```
-Dari setiap id thread dicek untuk menjalankan tugasnya yaitu menghitung dan menyimpan nilai hasil perkalian dari setiap kolom. Untuk perkaliannya, seperti matriks pada umumnya yaitu misal untuk menghitung nilai matriks hasil pada elemen (1,1) maka caranya elemen (1,1) Matriks 1  *  elemen (1,1) Matriks 2 + elemen (1,2) Matriks 1 * elemen (2,1) Matriks 2 
-```
-key_t key = 1234;
-int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-arrays3 =  shmat(shmid,NULL,0);  
-```
-Kode diatas yaitu digunakan untuk deklarasi shared memory yang akan digunakan untuk mendapatkan hasil dari array perkalian matriks untuk ditampilkan di nomor selanjutnya. key digunakan sebagai parameter dalam shmget. shmget sendiri akan mereturn identifier untuk shared memory, int[4][5] dalam parameter digunakan sebagai acuan ukuran variabel yang ada di shared memory (array hasil perkalian matriks). Dan setelah identifier shared memory didapat,variabel diattach ke shared memory identifier tadi dengan menggunakan shmat. 
-
-```c
-printf("Matriks 1:\n");
-    for(int i=0; i<4; i++)
-    {
-        for(int j=0; j<2 ;j++)
-        {
-            arrays1[i][j] = size;
-            printf("%d ", arrays1[i][j]);
-            size++;
-        }
-        printf("\n");
-    }
-    printf("\nMatriks2:\n");
-    for(int i=0; i<2; i++)
-    {
-        for(int j=0; j<5 ;j++){
-            arrays2[i][j] = size1;
-            printf("%d ", arrays2[i][j]);
-            size1++;
-        }
-        printf("\n");
-    }
-    printf("\n");
- ```
- Kode tersebut untuk mencetak matriks yang dikalikan.
- ```c
-  while(k<5)
-    {
-        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
-        if(err != 0){
-            printf("Can't create thread : [%s]\n", strerror(err));
-        }else{
-            //printf("Crate thread success\n");
-        }
-        k++;
-    }
-    pthread_join(tid[0], NULL);
-    pthread_join(tid[1], NULL);
-    pthread_join(tid[2], NULL);
-    pthread_join(tid[3], NULL);
-    pthread_join(tid[4], NULL);
- ```
-Kemudian untuk kode diatas, yaitu untuk menjalankan thread dimana menggunakan perulangan while sejumlah (banyak thread - 1) serta fungsi multiplier yang sudah dibuat sebelumnya. Setelah dijalankan, maka semua thread dijoin dengan perintah pthread_join 
-```c
-printf("Matriks hasil:\n");
-    for(int i=0; i<4; i++){
-        for(int k=0; k<5; k++)
-        {
-            printf("%d ", arrays3[i][k]);
-        }
-        printf("\n");
-    }
- ```
-Kode tersebut digunakan untuk mencetak matriks hasil perkalian.
-Kemudian kode berikut, yaitu shmdt digunakan untuk mendetach variabel dari shared memory. dan exit(0) digunakan untuk keluar dari program
- ```
- shmdt(arrays3);
- exit(0);
- ```
- 
 **Soal 3 :**
 
 Buatlah sebuah program dari C untuk mengkategorikan file. Program ini akan
@@ -1000,4 +505,584 @@ else if(strcmp(argv[1], "-d") == 0){
 }
 ```
 Untuk bagian terakhir konsepnya sama dengan * namun yang dipindah dari path input ke current working directory, konsepnya sama semua hanya ada modifikasi pada goal path saja.
+
+**Soal 4**
+
+4a.
+1. Buatlah program C dengan nama "4a.c", yang berisi program untuk
+melakukan perkalian matriks. Ukuran matriks pertama adalah 4x2, dan
+matriks kedua 2x5. Isi dari matriks didefinisikan di dalam kodingan. Matriks
+nantinya akan berisi angka 1-20 (tidak perlu dibuat filter angka).
+4a.
+2. Tampilkan matriks hasil perkalian tadi ke layar.
+4b.
+1. Buatlah program C kedua dengan nama "4b.c". Program ini akan
+mengambil variabel hasil perkalian matriks dari program "4a.c" (program
+sebelumnya), dan tampilkan hasil matriks tersebut ke layar.
+(Catatan!: gunakan shared memory)
+4b.
+2. Setelah ditampilkan, berikutnya untuk setiap angka dari matriks
+tersebut, carilah nilai faktorialnya, dan tampilkan hasilnya ke layar dengan
+format seperti matriks.
+
+Contoh: misal array [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], ...],
+
+maka:
+
+1 2 6 24
+120 720 ... ...
+...
+
+(Catatan! : Harus menggunakan Thread dalam penghitungan
+faktorial)
+4c.1. Buatlah program C ketiga dengan nama "4c.c". Program ini tidak
+memiliki hubungan terhadap program yang lalu.
+4c.2. Pada program ini, Norland diminta mengetahui jumlah file dan
+folder di direktori saat ini dengan command "ls | wc -l". Karena sudah belajar
+IPC, Norland mengerjakannya dengan semangat.
+(Catatan! : Harus menggunakan IPC Pipes)
+
+**Source code nomor 4a:**
+```c
+#include<stdio.h>
+#include<string.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include <sys/ipc.h> 
+#include <sys/shm.h> 
+
+pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
+int arrays1[4][2], arrays2[2][5];
+int (*arrays3)[5], size=1, size1=1;
+void *multiplier(void *arg) {
+    pthread_t id = pthread_self();
+    if(pthread_equal(id, tid[0]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][4] = (arrays1[i][0]*arrays2[0][4]) + (arrays1[i][1]*arrays2[1][4]);
+        }
+    }
+    else if(pthread_equal(id, tid[1]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][3] = (arrays1[i][0]*arrays2[0][3]) + (arrays1[i][1]*arrays2[1][3]);
+        }
+    }
+    else if(pthread_equal(id, tid[2]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][2] = (arrays1[i][0]*arrays2[0][2]) + (arrays1[i][1]*arrays2[1][2]);
+        }
+    }
+    else if(pthread_equal(id, tid[3]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][1] = (arrays1[i][0]*arrays2[0][1]) + (arrays1[i][1]*arrays2[1][1]);    
+        }
+    }
+    else 
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][0] = (arrays1[i][0]*arrays2[0][0]) + (arrays1[i][1]*arrays2[1][0]);
+        }
+    }
+}
+
+int main()
+{
+    key_t key = 1234;
+    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
+    arrays3 =  shmat(shmid,NULL,0);  
+    int k=0, err;
+    
+    printf("Matriks 1:\n");
+    for(int i=0; i<4; i++)
+    {
+        for(int j=0; j<2 ;j++)
+        {
+            arrays1[i][j] = size;
+            printf("%d ", arrays1[i][j]);
+            size++;
+        }
+        printf("\n");
+    }
+    printf("\nMatriks2:\n");
+    for(int i=0; i<2; i++)
+    {
+        for(int j=0; j<5 ;j++){
+            arrays2[i][j] = size1;
+            printf("%d ", arrays2[i][j]);
+            size1++;
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    while(k<5)
+    {
+        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
+        if(err != 0){
+            printf("Can't create thread : [%s]\n", strerror(err));
+        }else{
+            //printf("Crate thread success\n");
+        }
+        k++;
+    }
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+    pthread_join(tid[3], NULL);
+    pthread_join(tid[4], NULL);
+    
+    printf("Matriks hasil:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrays3[i][k]);
+        }
+        printf("\n");
+    }
+    shmdt(arrays3);
+    exit(0);
+    return 0;
+}
+```
+Penjelasan source code no 4a:
+Untuk soal no 4a digunakan thread sebanyak 5, yaitu dimana setiap thread digunakan untuk menghitung hasil perkalian dari setiap kolom matriks, dimana dideklarasikan juga ukuran matriks yang dikalikan, matriks hasil seperti berikut, matriks hasil disini menggunakan pointer karena akan digunakan dalam shared memory. Digunakan juga variabel size dan size1 untuk membantu deklarasi nilai elemen matriks
+```c
+int arrays1[4][2], arrays2[2][5];
+int (*arrays3)[5], size=1, size1=1;``
+```
+Kemudian ada fungsi multiplier yang merupakan fungsi yg menjalankan tugas masing-masing thread 
+```c
+void *multiplier(void *arg) {
+    pthread_t id = pthread_self();
+    if(pthread_equal(id, tid[0]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][4] = (arrays1[i][0]*arrays2[0][4]) + (arrays1[i][1]*arrays2[1][4]);
+        }
+    }
+    else if(pthread_equal(id, tid[1]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][3] = (arrays1[i][0]*arrays2[0][3]) + (arrays1[i][1]*arrays2[1][3]);
+        }
+    }
+    else if(pthread_equal(id, tid[2]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][2] = (arrays1[i][0]*arrays2[0][2]) + (arrays1[i][1]*arrays2[1][2]);
+        }
+    }
+    else if(pthread_equal(id, tid[3]))
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][1] = (arrays1[i][0]*arrays2[0][1]) + (arrays1[i][1]*arrays2[1][1]);    
+        }
+    }
+    else 
+    {
+        for (int i=0; i<4; i++) {
+            arrays3[i][0] = (arrays1[i][0]*arrays2[0][0]) + (arrays1[i][1]*arrays2[1][0]);
+        }
+    }
+}
+```
+Dari setiap id thread dicek untuk menjalankan tugasnya yaitu menghitung dan menyimpan nilai hasil perkalian dari setiap kolom. Untuk perkaliannya, seperti matriks pada umumnya yaitu misal untuk menghitung nilai matriks hasil pada elemen (1,1) maka caranya elemen (1,1) Matriks 1  *  elemen (1,1) Matriks 2 + elemen (1,2) Matriks 1 * elemen (2,1) Matriks 2 
+```
+key_t key = 1234;
+int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
+arrays3 =  shmat(shmid,NULL,0);  
+```
+Kode diatas yaitu digunakan untuk deklarasi shared memory yang akan digunakan untuk mendapatkan hasil dari array perkalian matriks untuk ditampilkan di nomor selanjutnya. key digunakan sebagai parameter dalam shmget. shmget sendiri akan mereturn identifier untuk shared memory, int[4][5] dalam parameter digunakan sebagai acuan ukuran variabel yang ada di shared memory (array hasil perkalian matriks). Dan setelah identifier shared memory didapat,variabel diattach ke shared memory identifier tadi dengan menggunakan shmat. 
+
+```c
+printf("Matriks 1:\n");
+    for(int i=0; i<4; i++)
+    {
+        for(int j=0; j<2 ;j++)
+        {
+            arrays1[i][j] = size;
+            printf("%d ", arrays1[i][j]);
+            size++;
+        }
+        printf("\n");
+    }
+    printf("\nMatriks2:\n");
+    for(int i=0; i<2; i++)
+    {
+        for(int j=0; j<5 ;j++){
+            arrays2[i][j] = size1;
+            printf("%d ", arrays2[i][j]);
+            size1++;
+        }
+        printf("\n");
+    }
+    printf("\n");
+ ```
+ Kode tersebut untuk mencetak matriks yang dikalikan.
+ ```c
+  while(k<5)
+    {
+        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
+        if(err != 0){
+            printf("Can't create thread : [%s]\n", strerror(err));
+        }else{
+            //printf("Crate thread success\n");
+        }
+        k++;
+    }
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+    pthread_join(tid[3], NULL);
+    pthread_join(tid[4], NULL);
+ ```
+Kemudian untuk kode diatas, yaitu untuk menjalankan thread dimana menggunakan perulangan while sejumlah (banyak thread - 1) serta fungsi multiplier yang sudah dibuat sebelumnya. Setelah dijalankan, maka semua thread dijoin dengan perintah pthread_join 
+```c
+printf("Matriks hasil:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrays3[i][k]);
+        }
+        printf("\n");
+    }
+ ```
+Kode tersebut digunakan untuk mencetak matriks hasil perkalian.
+Kemudian kode berikut, yaitu shmdt digunakan untuk mendetach variabel dari shared memory. dan exit(0) digunakan untuk keluar dari program
+ ```
+ shmdt(arrays3);
+ exit(0);
+ ```
+ **Source code nomor 4b:**
+ ```c
+ #include <sys/ipc.h> 
+#include <sys/shm.h> 
+#include <stdio.h> 
+#include<string.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
+pid_t child;
+int controller = 0;
+
+int arrayshasil[4][5];
+int (*arrays3)[5],size=1, size1=1;
+
+void *multiplier(void *arg) 
+{
+    pthread_t id = pthread_self();
+    if(pthread_equal(id, tid[0]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][4]; j++)
+             {
+                 arrayshasil[i][4]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[1]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][3]; j++)
+             {
+                 arrayshasil[i][3]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[2]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][2]; j++)
+             {
+                 arrayshasil[i][2]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[3]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][1]; j++)
+             {
+                 arrayshasil[i][1]+=j;
+             }
+        }
+    }
+    else 
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][0]; j++)
+             {
+                 arrayshasil[i][0]+=j;
+             }
+        }
+    }
+}
+
+int main() 
+{
+    int k=0, err;
+    for(int i=0;i<4;i++)
+    {
+        for(int j=0;j<5;j++)
+        {
+            arrayshasil[i][j]=0;
+        }
+    } 
+
+    key_t key = 1234;
+    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT);  
+    arrays3 =  shmat(shmid,NULL,0);  
+    printf("Matriks hasil:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrays3[i][k]);
+        }
+        printf("\n");
+    }
+    while(k<5)
+    {
+        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
+        if(err != 0){
+            printf("Can't create thread : [%s]\n", strerror(err));
+        }else{
+            //printf("Crate thread success\n");
+        }
+        k++;
+    }
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+    pthread_join(tid[3], NULL);
+    pthread_join(tid[4], NULL);
+
+    printf("\nMatriks Penjumlahan:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrayshasil[i][k]);
+        }
+        printf("\n");
+    }
+
+    shmdt(arrays3); 
+    shmctl(shmid,IPC_RMID,NULL); 
+    exit(0);
+    return 0; 
+} 
+```
+Penjelasan source code no 4b:
+Untuk soal no 4b digunakan thread sebanyak 5, yaitu dimana setiap thread digunakan untuk menghitung hasil penjumlahan dari 1 hingga bilangan di elemen matriks itu sendiri untuk setiap kolom matriks, dimana dideklarasikan juga ukuran matriks yang dikalikan, matriks hasil seperti berikut, matriks hasil disini menggunakan pointer karena akan digunakan dalam shared memory. Digunakan juga variabel size dan size1 untuk membantu deklarasi nilai elemen matriks
+```c
+int arrays1[4][2], arrays2[2][5];
+int (*arrays3)[5], size=1, size1=1;``
+```
+Kemudian ada fungsi multiplier yang merupakan fungsi yg menjalankan tugas masing-masing thread 
+```c
+void *multiplier(void *arg) 
+{
+    pthread_t id = pthread_self();
+    if(pthread_equal(id, tid[0]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][4]; j++)
+             {
+                 arrayshasil[i][4]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[1]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][3]; j++)
+             {
+                 arrayshasil[i][3]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[2]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][2]; j++)
+             {
+                 arrayshasil[i][2]+=j;
+             }
+        }
+    }
+    else if(pthread_equal(id, tid[3]))
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][1]; j++)
+             {
+                 arrayshasil[i][1]+=j;
+             }
+        }
+    }
+    else 
+    {
+        for (int i=0; i<4; i++) 
+        {
+             for(int j=1; j<=(int)arrays3[i][0]; j++)
+             {
+                 arrayshasil[i][0]+=j;
+             }
+        }
+    }
+}
+```
+Dari setiap id thread dicek untuk menjalankan tugasnya yaitu menghitung dan menyimpan nilai hasil penjumlahan dari 1 hingga bilangan di elemen matriks itu sendiri dari setiap kolom. Untuk perhitungannya, seperti matriks pada umumnya yaitu misal untuk menghitung nilai matriks hasil pada elemen (1,1) maka caranya dilakukan perulangan mulai dari 1 hingga bilangan di elemen (1,1) matriks hasil sebelumnya dan ditambahkan elemen matriks hasil baru dengan nilai yang menjadi acuan perulangan.  
+```
+key_t key = 1234;
+int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
+arrays3 =  shmat(shmid,NULL,0);  
+```
+Kode diatas yaitu digunakan untuk deklarasi shared memory yang akan digunakan untuk mendapatkan hasil dari array perkalian matriks untuk ditampilkan di nomor selanjutnya. key digunakan sebagai parameter dalam shmget. shmget sendiri akan mereturn identifier untuk shared memory, int[4][5] dalam parameter digunakan sebagai acuan ukuran variabel yang ada di shared memory (array hasil perkalian matriks). Dan setelah identifier shared memory didapat,variabel diattach ke shared memory identifier tadi dengan menggunakan shmat. 
+
+```c
+printf("Matriks hasil:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrays3[i][k]);
+        }
+        printf("\n");
+    }
+ ```
+ Kode tersebut untuk mencetak matriks yang hasil dari perkalian di nomor sebelumnya.
+ ```c
+  while(k<5)
+    {
+        err = err=pthread_create(&(tid[k]), NULL, &multiplier, NULL); //pembuatan thread
+        if(err != 0){
+            printf("Can't create thread : [%s]\n", strerror(err));
+        }else{
+            //printf("Crate thread success\n");
+        }
+        k++;
+    }
+    pthread_join(tid[0], NULL);
+    pthread_join(tid[1], NULL);
+    pthread_join(tid[2], NULL);
+    pthread_join(tid[3], NULL);
+    pthread_join(tid[4], NULL);
+ ```
+Kemudian untuk kode diatas, yaitu untuk menjalankan thread dimana menggunakan perulangan while sejumlah (banyak thread - 1) serta fungsi multiplier yang sudah dibuat sebelumnya. Setelah dijalankan, maka semua thread dijoin dengan perintah pthread_join 
+```c
+    printf("\nMatriks Penjumlahan:\n");
+    for(int i=0; i<4; i++){
+        for(int k=0; k<5; k++)
+        {
+            printf("%d ", arrayshasil[i][k]);
+        }
+        printf("\n");
+    }
+ ```
+Kode tersebut digunakan untuk mencetak matriks hasil penjumlahan.
+Kemudian kode berikut, yaitu shmdt digunakan untuk mendetach variabel dari shared memory. shmctl digunakan untuk mendestroy shared memory yang dibuat dan exit(0) digunakan untuk keluar dari program
+ ```
+ shmdt(arrays3);
+ shmctl(shmid,IPC_RMID,NULL); 
+ exit(0);
+ ```
+ **Source code nomor 4c:**
+ ```c
+#include <stdlib.h>
+#include <unistd.h>
+
+int pid;
+int pipe1[2];
+
+int main()
+{
+    if (pipe(pipe1) == -1)
+        exit(1);
+
+    if ((fork()) == 0)
+    {
+        // output to pipe1
+        dup2(pipe1[1], 1);
+        // close fds
+        close(pipe1[0]);
+        close(pipe1[1]);
+        // exec
+        char *argv1[] = {"ls", NULL};
+        execv("/bin/ls", argv1);
+    }
+    else
+    {
+        // input from pipe1
+        dup2(pipe1[0], 0);
+        close(pipe1[0]);
+        close(pipe1[1]);
+        // exec
+        char *argv1[] = {"wc", "-l", NULL};
+        execv("/usr/bin/wc", argv1);
+    }
+
+}
+```
+Penjelasan source code no 4c:
+```
+int pid;
+int pipe1[2];
+```
+digunakan untuk mendeklarasikan pid dan juga pipe. Pipe yang digunaka yaitu berjumlah 1.
+```c
+   if (pipe(pipe1) == -1)
+        exit(1);
+
+    if ((fork()) == 0)
+    {
+        // output to pipe1
+        dup2(pipe1[1], 1);
+        // close fds
+        close(pipe1[0]);
+        close(pipe1[1]);
+        // exec
+        char *argv1[] = {"ls", NULL};
+        execv("/bin/ls", argv1);
+    }
+ ```
+Kode tersebut yaitu digunakan untuk mengecek pembuatan pipe1 yang akan digunakan fail atau tidak. kemudian digunakan fork untuk mengeksesekusi command. Jika ternyata berada di child (pid==0) maka dilakukan eksekusi untuk command ls. sebelum dieksekusi, digunakan perintah `dup2(pipe1[1], 1);` yang digunakan untuk menulis output dari eksekusi yang akan dijalankan ke pipe1. kemudian pipe1 ditutup dengan perintah 
+```
+close(pipe1[0]);
+close(pipe1[1]);
+```
+Setelah itu baru dieksekusi command ls dengan perintah execv menggunakan parameter `/bin/ls` 
+```c
+    else
+    {
+        // input from pipe1
+        dup2(pipe1[0], 0);
+        close(pipe1[0]);
+        close(pipe1[1]);
+        // exec
+        char *argv1[] = {"wc", "-l", NULL};
+        execv("/usr/bin/wc", argv1);
+    }
+```
+Setelah itu, jika ternyata pid ada di parent maka digunakan perintah `dup2(pipe1[0], 0);` untuk mengambil inputan dari pipe1. Setelah itu pipe1 ditutup dengan perintah 
+```
+close(pipe1[0]);
+close(pipe1[1]);
+```
+Baru kemudian dieksekusi command wc -l dengan perintah execv menggunakan parameter `usr/bin/wc`
 
