@@ -50,13 +50,13 @@ void *multiplier(void *arg) {
 
 int main()
 {
-    key_t key = ftok("shmfile",65); 
+    key_t key = 1234;
   
     // shmget returns an identifier in shmid 
     int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
   
     // shmat to attach to shared memory 
-    arrays3 =  shmat(shmid,(void*)0,0);  
+    arrays3 =  shmat(shmid,NULL,0);  
 
     int k=0, err;
 
