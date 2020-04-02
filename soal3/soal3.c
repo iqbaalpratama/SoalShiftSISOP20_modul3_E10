@@ -95,7 +95,7 @@ void *hitung(void *arg) {
         while ((ch = fgetc(pf1)) != EOF) {
             fputc(ch, pf2);
         }
-        // remove(arg);
+        remove(arg);
         // Close file
         fclose(pf1);
         fclose(pf2);
@@ -177,7 +177,7 @@ void *hitung2(void *arg) {
         while ((ch = fgetc(pf1)) != EOF) {
             fputc(ch, pf2);
         }
-        // remove(arg);
+        remove(arg);
         // Close file
         fclose(pf1);
         fclose(pf2);
