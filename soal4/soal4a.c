@@ -8,7 +8,7 @@
 #include <sys/ipc.h> 
 #include <sys/shm.h> 
 
-pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 3 thread)
+pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
 pid_t child;
 int controller = 0;
 
