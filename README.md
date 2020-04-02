@@ -2,16 +2,20 @@
 
 **Soal 4**
 
-4a.1. Buatlah program C dengan nama "4a.c", yang berisi program untuk
+4a.
+1. Buatlah program C dengan nama "4a.c", yang berisi program untuk
 melakukan perkalian matriks. Ukuran matriks pertama adalah 4x2, dan
 matriks kedua 2x5. Isi dari matriks didefinisikan di dalam kodingan. Matriks
 nantinya akan berisi angka 1-20 (tidak perlu dibuat filter angka).
-4a.2. Tampilkan matriks hasil perkalian tadi ke layar.
-4b.1. Buatlah program C kedua dengan nama "4b.c". Program ini akan
+4a.
+2. Tampilkan matriks hasil perkalian tadi ke layar.
+4b.
+1. Buatlah program C kedua dengan nama "4b.c". Program ini akan
 mengambil variabel hasil perkalian matriks dari program "4a.c" (program
 sebelumnya), dan tampilkan hasil matriks tersebut ke layar.
 (Catatan!: gunakan shared memory)
-4b.2. Setelah ditampilkan, berikutnya untuk setiap angka dari matriks
+4b.
+2. Setelah ditampilkan, berikutnya untuk setiap angka dari matriks
 tersebut, carilah nilai faktorialnya, dan tampilkan hasilnya ke layar dengan
 format seperti matriks.
 
