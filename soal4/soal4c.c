@@ -3,7 +3,6 @@
 
 int pid;
 int pipe1[2];
-int pipe2[2];
 
 int main()
 {
