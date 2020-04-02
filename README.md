@@ -914,3 +914,90 @@ fclose(pf1);
 fclose(pf2);
 ```
 Setelah pembuatan folder selesai, langkah selanjutnya adalah pemindahan file-file ke folder-folder yang bersesuaian. Proses pemindahan dilakukan dengan mengkopi data-data biner dari file asal ke file baru (membuat duplikat) yaitu pertama kita buka file asal dengan pf1 (metode baca), lalu kita buka file tujuan (nantinya) dengan metode tulis. File tujuan diperoleh dengan menggabungkan tempo (/home/apagitu/c/) dengan . dan ektensi. Lalu dilakukan perulangan untuk membaca pf1 dan memindahkannya ke pf2 (nama dari asal dan tujuan sama) sampai semua isi dan bentuk file terbentuk pada tujuan. Ketika selesai file asal di hapus dengan fungsi remove() lalu tutup semua pointer pf1 dan pf2.
+ 
+Untuk fungsi hitung2 sama dengan hitung, hanya berbeda pada path tujuannya. Untuk hitung2 digunakan untuk bagian yang menggunakan working path. Selanjutnya fungsi hitung dan hitung2 bertipe void * untuk penyesuaian pada parameter fungsi pembuatan thread. Lalu pembahasan kode pada fungsi main adalah sebagai berikut :
+```c
+if(strcmp(argv[1], "-f") == 0){
+	for(int i=2; i<argc; i++){
+		pthread_create(&(tid[i]), NULL, hitung, (void *)argv[i]);
+	}
+	for(int i=2; i<argc ;i++){
+		pthread_join(tid[i], NULL);
+	}
+}
+```
+Pada bagian pertama akan dilakukan pengecekan ketika argumen pertama (argv[1]) nya adalah -f maka kita jalankan aturan pertama yaitu memindahkan file dari path inputan ke /home/apagitu/ekstensi. Lalu setiap argumen kami pasing dalam fungsi dan setiap fungsi kami jalankan dalam thread-thread. Setelah loop untuk operasi selesai, thread dijoin kembali. 
+```c
+else if(strcmp(argv[1], "*") == 0){
+	getcwd(cwd, sizeof(cwd));
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir (cwd)) != NULL) {
+		char temp[1024] = "\0";
+		while ((ent = readdir (dir)) != NULL) {
+			strcpy(temp, cwd);
+			strcat(temp, "/");
+			strcat(temp, ent->d_name);
+			printf ("%s\n", temp);
+			char a[50];
+			char b[50];
+			strcpy(a, cwd);
+			strcat(a, "..");
+			strcpy(b, cwd);
+			strcat(b, ".");
+			if(strcmp(temp,a)==0 || strcmp(temp,b)==0){
+				continue;
+			}
+			if(!is_dir(temp)){
+				pthread_create(&(tid[loop]), NULL, hitung, (void *)temp);
+				loop++;	
+			}
+			for(int j=0; j<loop; j++){
+				pthread_join(tid[j], NULL);
+			}
+		}
+		closedir (dir);
+	}
+}
+```
+Pada bagian ini ketika argumen adalah * maka akan memindahakan semua file pada working directory saat ini ke /home/apagitu/ektensi. Untuk mendapatkan current working directory digunakan fungsi getcwd lalu disimpan pada array global cwd. Setelah itu kita lakukan loop untuk mengambil seluruh file (folder tidak) dan hanya diambil 1 level saja. Lalu kita lakukan pengecekan bahwa current working folder tidak kosong lalu lakukan looping untuk setiap file, pertama kita buka pointer untuk direktori yaitu dir, ketika dir tidak null maka ada isinya, lalu masuk kedalam loop dan ambil nama file tersebut lalu kita concat dengan current working direktori lalu lakukan exception untuk .. dan . ketika melakukan loopin. Setelah itu cek apakah hasil concat adalah file, ketika benar maka kita passing kedalam fungsi hitung melewati thread. Setelah semua file terloop dan terpindah maka join kembali threadnya.
+```c
+else if(strcmp(argv[1], "-d") == 0){
+	getcwd(cwd, sizeof(cwd));
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir (argv[2])) != NULL) {
+		char temp[1024] = "\0";
+		while ((ent = readdir (dir)) != NULL) {
+		strcpy(temp, argv[2]);
+		//strcat(temp, "/");
+		strcat(temp, ent->d_name);
+		printf ("%s\n", temp);
+
+		char a[50];
+		char b[50];
+
+		strcpy(a, cwd);
+		strcat(a, "..");
+		strcpy(b, cwd);
+		strcat(b, ".");
+
+		if(strcmp(temp,a)==0 || strcmp(temp,b)==0){
+			continue;
+		}
+		if(!is_dir(temp)){
+			pthread_create(&(tid[loop]), NULL, hitung2, (void *)temp);
+			loop++;
+		}
+		for(int j=0; j<loop; j++){
+			pthread_join(tid[j], NULL);
+		}
+	}
+		closedir (dir);
+	}
+}else{
+	exit(0);
+}
+```
+Untuk bagian terakhir konsepnya sama dengan * namun yang dipindah dari path input ke current working directory, konsepnya sama semua hanya ada modifikasi pada goal path saja.
+
