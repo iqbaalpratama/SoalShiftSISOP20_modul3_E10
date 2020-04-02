@@ -7,12 +7,12 @@
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/wait.h>
-pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
+pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 3 thread)
 pid_t child;
 int controller = 0;
 
 int arrayshasil[4][5];
-int (*arrays3)[5];
+int (*arrays3)[5],size=1, size1=1;
 
 void *multiplier(void *arg) 
 {
@@ -23,7 +23,7 @@ void *multiplier(void *arg)
         {
              for(int j=1; j<=(int)arrays3[i][4]; j++)
              {
-                 arrayshasil[i][4]*=j;
+                 arrayshasil[i][4]+=j;
              }
         }
     }
@@ -33,7 +33,7 @@ void *multiplier(void *arg)
         {
              for(int j=1; j<=(int)arrays3[i][3]; j++)
              {
-                 arrayshasil[i][3]*=j;
+                 arrayshasil[i][3]+=j;
              }
         }
     }
@@ -43,7 +43,7 @@ void *multiplier(void *arg)
         {
              for(int j=1; j<=(int)arrays3[i][2]; j++)
              {
-                 arrayshasil[i][2]*=j;
+                 arrayshasil[i][2]+=j;
              }
         }
     }
@@ -53,7 +53,7 @@ void *multiplier(void *arg)
         {
              for(int j=1; j<=(int)arrays3[i][1]; j++)
              {
-                 arrayshasil[i][1]*=j;
+                 arrayshasil[i][1]+=j;
              }
         }
     }
@@ -63,7 +63,7 @@ void *multiplier(void *arg)
         {
              for(int j=1; j<=(int)arrays3[i][0]; j++)
              {
-                 arrayshasil[i][0]*=j;
+                 arrayshasil[i][0]+=j;
              }
         }
     }
@@ -76,7 +76,7 @@ int main()
     {
         for(int j=0;j<5;j++)
         {
-            arrayshasil[i][j]=1;
+            arrayshasil[i][j]=0;
         }
     } 
     // ftok to generate unique key 
@@ -111,7 +111,7 @@ int main()
     pthread_join(tid[3], NULL);
     pthread_join(tid[4], NULL);
 
-    printf("Matriks Faktorial:\n");
+    printf("\nMatriks Penjumlahan:\n");
     for(int i=0; i<4; i++){
         for(int k=0; k<5; k++)
         {
