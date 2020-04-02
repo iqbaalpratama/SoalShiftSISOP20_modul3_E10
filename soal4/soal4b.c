@@ -7,7 +7,7 @@
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/wait.h>
-pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 3 thread)
+pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
 pid_t child;
 int controller = 0;
 
@@ -21,48 +21,47 @@ void *multiplier(void *arg)
     {
         for (int i=0; i<4; i++) 
         {
-           for(int j=(int)arrays3[i][4]; j>0; j--)
-            {
-                arrayshasil[i][4]*=j;
-            }
+             for(int j=1; j<=(int)arrays3[i][4]; j++)
+             {
+                 arrayshasil[i][4]*=j;
+             }
         }
     }
     else if(pthread_equal(id, tid[1]))
     {
         for (int i=0; i<4; i++) 
         {
-           for(int j=(int)arrays3[i][3]; j>0; j--)
-            {
-                arrayshasil[i][3]*=j;
-            }
+             for(int j=1; j<=(int)arrays3[i][3]; j++)
+             {
+                 arrayshasil[i][3]*=j;
+             }
         }
     }
     else if(pthread_equal(id, tid[2]))
     {
         for (int i=0; i<4; i++) 
         {
-            for(int j=(int)arrays3[i][2]; j>0; j--)
-            {
-                arrayshasil[i][2]*=j;
-            }
+             for(int j=1; j<=(int)arrays3[i][2]; j++)
+             {
+                 arrayshasil[i][2]*=j;
+             }
         }
     }
     else if(pthread_equal(id, tid[3]))
     {
         for (int i=0; i<4; i++) 
         {
-            for(int j=(int)arrays3[i][1]; j>0; j--)
-            {
-                arrayshasil[i][1]*=j;
-            }  
+             for(int j=1; j<=(int)arrays3[i][1]; j++)
+             {
+                 arrayshasil[i][1]*=j;
+             }
         }
     }
     else 
     {
         for (int i=0; i<4; i++) 
         {
-             int bound=(int)arrays3[i][0];
-             for(int j=1; j<=bound; j++)
+             for(int j=1; j<=(int)arrays3[i][0]; j++)
              {
                  arrayshasil[i][0]*=j;
              }
@@ -80,13 +79,14 @@ int main()
             arrayshasil[i][j]=1;
         }
     } 
- 
-    key_t key = ftok("shmfile",65); 
+    // ftok to generate unique key 
+     key_t key = 1234;
 
+    // shmget returns an identifier in shmid 
     int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
   
     // shmat to attach to shared memory 
-    arrays3 =  shmat(shmid,(void*)0,0);  
+    arrays3 =  shmat(shmid,NULL,0);  
     printf("Matriks hasil:\n");
     for(int i=0; i<4; i++){
         for(int k=0; k<5; k++)
@@ -122,6 +122,7 @@ int main()
 
     shmdt(arrays3); 
     
+    // destroy the shared memory 
     shmctl(shmid,IPC_RMID,NULL); 
      
     return 0; 
