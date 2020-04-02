@@ -79,13 +79,9 @@ int main()
             arrayshasil[i][j]=0;
         }
     } 
-    // ftok to generate unique key 
-     key_t key = 1234;
 
-    // shmget returns an identifier in shmid 
-    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-  
-    // shmat to attach to shared memory 
+    key_t key = 1234;
+    int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT);  
     arrays3 =  shmat(shmid,NULL,0);  
     printf("Matriks hasil:\n");
     for(int i=0; i<4; i++){
@@ -121,9 +117,7 @@ int main()
     }
 
     shmdt(arrays3); 
-    
-    // destroy the shared memory 
     shmctl(shmid,IPC_RMID,NULL); 
-     
+    exit(0);
     return 0; 
 } 
