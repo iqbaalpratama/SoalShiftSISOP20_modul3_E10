@@ -9,11 +9,8 @@
 #include <sys/shm.h> 
 
 pthread_t tid[5]; //inisisasi banyaknya thread (dalam kasus ini 5 thread)
-pid_t child;
-int controller = 0;
-
 int arrays1[4][2], arrays2[2][5];
-int (*arrays3)[5];
+int (*arrays3)[5], size=1, size1=1;
 void *multiplier(void *arg) {
     pthread_t id = pthread_self();
     if(pthread_equal(id, tid[0]))
@@ -51,20 +48,13 @@ void *multiplier(void *arg) {
 int main()
 {
     key_t key = 1234;
-  
-    // shmget returns an identifier in shmid 
     int shmid = shmget(key,sizeof(int[4][5]),0666|IPC_CREAT); 
-  
-    // shmat to attach to shared memory 
     arrays3 =  shmat(shmid,NULL,0);  
-
     int k=0, err;
-
     
     printf("Matriks 1:\n");
     for(int i=0; i<4; i++)
     {
-        int size = 1;
         for(int j=0; j<2 ;j++)
         {
             arrays1[i][j] = size;
@@ -76,7 +66,6 @@ int main()
     printf("\nMatriks2:\n");
     for(int i=0; i<2; i++)
     {
-        int size1=1;
         for(int j=0; j<5 ;j++){
             arrays2[i][j] = size1;
             printf("%d ", arrays2[i][j]);
