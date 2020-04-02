@@ -608,4 +608,4 @@ remove(arg);
 fclose(pf1);
 fclose(pf2);
 ```
-Setelah pembuatan folder selesai, langkah selanjutnya adalah pemindahan file-file ke folder-folder yang bersesuaian.
+Setelah pembuatan folder selesai, langkah selanjutnya adalah pemindahan file-file ke folder-folder yang bersesuaian. Proses pemindahan dilakukan dengan mengkopi data-data biner dari file asal ke file baru (membuat duplikat) yaitu pertama kita buka file asal dengan pf1 (metode baca), lalu kita buka file tujuan (nantinya) dengan metode tulis. File tujuan diperoleh dengan menggabungkan tempo (/home/apagitu/c/) dengan . dan ektensi. Lalu dilakukan perulangan untuk membaca pf1 dan memindahkannya ke pf2 (nama dari asal dan tujuan sama) sampai semua isi dan bentuk file terbentuk pada tujuan. Ketika selesai file asal di hapus dengan fungsi remove() lalu tutup semua pointer pf1 dan pf2.
