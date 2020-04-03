@@ -359,6 +359,8 @@ int main() {
     return 0;
 }
 ```
+Penjelasan source code client:
+Menggunakan socket, dimana saat muncul pilihan login dan register kemudian memilih antara login dan register maka, pilihan tersebut akan dikirim ke server. Jika saat memilih login dan dari server mengirim string login success ke client dari hasil fungsi create_call_login maka dijalankan thread untuk memunculkan screen dua. Sedangkan jika ternyata user memilih register maka dipanggil fungsi create_call_register yang akan memproses register user
 
 **Soal 3 :**
 
