@@ -51,8 +51,8 @@ void create_call_register(char buffer[], int sock, int valread) {
     //printf("%s\n", buffer);
 }
 
-void *screen_two(int *ardg){
-    int sock = *(int)ardg;
+void *screen_two(void *ardg){
+    int sock = *(int *) ardg;
     while(1) {
         char strings[1024] = {0}, string2[1024] = {0}, amp;
         printf("1. Find Match\n2. Logout\nChoices : ");
@@ -81,7 +81,6 @@ void *screen_two(int *ardg){
             break;
         }
     }
-    return;
 }
 
 int main() {
