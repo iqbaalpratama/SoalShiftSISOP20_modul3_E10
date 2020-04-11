@@ -16,8 +16,7 @@
 
 pthread_t tid[100];
 // tid[0] untuk screen 2
-
-char *create_call_login(char buffer[], int sock, int valread) 
+char* create_call_login(char buffer[], int sock, int valread) 
 {
     char username[200] = {0};
     char password[100] = {0};
@@ -28,11 +27,9 @@ char *create_call_login(char buffer[], int sock, int valread)
     strcat(username, "|");
     strcat(username, password);
 
-    // printf(" username %s",username);
     send(sock , username , strlen(username) , 0 );
     valread = read(sock , buffer, 1024);
     return buffer;
-    printf("%s\n", buffer);
 }
 
 void create_call_register(char buffer[], int sock, int valread) {
@@ -44,16 +41,14 @@ void create_call_register(char buffer[], int sock, int valread) {
     scanf("%s", password);
     strcat(username, "|");
     strcat(username, password);
-
-    // printf(" username %s",username);
     send(sock , username , strlen(username) , 0 );
     valread = read(sock , buffer, 1024);
-    //printf("%s\n", buffer);
+    printf("%s\n", buffer);
 }
 
 void *screen_two(void *ardg){
     int sock = *(int *) ardg;
-    while(1) {
+        while(1) {
         char strings[1024] = {0}, string2[1024] = {0}, amp;
         printf("1. Find Match\n2. Logout\nChoices : ");
         scanf("%s", string2);
@@ -81,6 +76,7 @@ void *screen_two(void *ardg){
             break;
         }
     }
+    
 }
 
 int main() {
@@ -105,23 +101,25 @@ int main() {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
-
-
-    while(1) 
-    {
-        if (connect(sock, (struct sockaddr *)&serv_address, sizeof(serv_address)) < 0) 
+    if (connect(sock, (struct sockaddr *)&serv_address, sizeof(serv_address)) < 0) 
         {
             printf("\nConnection Failed \n");
             return -1;
         }
+    
+
+    while(1) 
+    {   
+        
         char buffer[1024] = {0}, buffer2[1024] = {0};
         printf("1. Login\n2. Register\nChoices : ");
         scanf("%s", buffer2);
         send(sock, buffer2 , strlen(buffer2), 0 );
         if (strcmp(buffer2,"login") == 0)
         {
-            strcpy(buffer, create_call_login(buffer, sock, valread));
-            if (strcmp(buffer, "login success") == 0) {
+           create_call_login(buffer, sock, valread);
+           printf("%s\n", buffer);
+           if (strcmp(buffer, "login success") == 0) {
                 pthread_create(&(tid[0]), NULL, screen_two, &sock);
                 pthread_join(tid[0], NULL);
             }
