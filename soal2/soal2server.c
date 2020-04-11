@@ -15,12 +15,13 @@
 pthread_t tid[1000];
 int player=0;
 
-void *client(void *arg){
+void *client(void *arg)
+{
     int valread;
     int socketfd = *(int *)arg;
     char buffer[1024] = {0};
     FILE *fpoint;
-    fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "a+");
+    fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "a+");
     
     while (1)
     {
@@ -38,7 +39,7 @@ void *client(void *arg){
             strcat(buffer2,"\n");
             fputs(buffer2,fpoint);
             fclose(fpoint);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             printf("List akun: \n");
             printf("Username | Password\n");
             while((str=fgetc(fpoint))!=EOF) 
@@ -52,7 +53,7 @@ void *client(void *arg){
         {
             char buffer2[1024] = {0};
             valread = read(socketfd , buffer2, 1024);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             while(fgets(temp, 512, fpoint) != NULL) 
             {
                 if((strstr(temp, buffer2)) != NULL) 
@@ -69,6 +70,7 @@ void *client(void *arg){
             }
             else
             {
+                printf("Auth Failed\n");
                 send(socketfd , "login failed" , strlen("login failed"), 0 );
             }
             fclose(fpoint);
@@ -126,7 +128,6 @@ int main(int argc, char const *argv[])
     int i;
     int total = 0;
     char buffering [1024] = {0};
-    // printf("coba");
     while(1)
     {
         if ((socketfd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) 
