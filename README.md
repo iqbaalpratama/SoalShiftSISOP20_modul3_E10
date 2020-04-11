@@ -94,12 +94,13 @@ Source code server:
 pthread_t tid[1000];
 int player=0;
 
-void *client(void *arg){
+void *client(void *arg)
+{
     int valread;
     int socketfd = *(int *)arg;
     char buffer[1024] = {0};
     FILE *fpoint;
-    fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "a+");
+    fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "a+");
     
     while (1)
     {
@@ -117,7 +118,7 @@ void *client(void *arg){
             strcat(buffer2,"\n");
             fputs(buffer2,fpoint);
             fclose(fpoint);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             printf("List akun: \n");
             printf("Username | Password\n");
             while((str=fgetc(fpoint))!=EOF) 
@@ -131,7 +132,7 @@ void *client(void *arg){
         {
             char buffer2[1024] = {0};
             valread = read(socketfd , buffer2, 1024);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             while(fgets(temp, 512, fpoint) != NULL) 
             {
                 if((strstr(temp, buffer2)) != NULL) 
@@ -148,6 +149,7 @@ void *client(void *arg){
             }
             else
             {
+                printf("Auth Failed\n");
                 send(socketfd , "login failed" , strlen("login failed"), 0 );
             }
             fclose(fpoint);
@@ -205,7 +207,6 @@ int main(int argc, char const *argv[])
     int i;
     int total = 0;
     char buffering [1024] = {0};
-    // printf("coba");
     while(1)
     {
         if ((socketfd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) 
@@ -221,12 +222,13 @@ int main(int argc, char const *argv[])
 ```
 Penjelasan source code server:
 ```c
-void *client(void *arg){
+void *client(void *arg)
+{
     int valread;
     int socketfd = *(int *)arg;
     char buffer[1024] = {0};
     FILE *fpoint;
-    fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "a+");
+    fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "a+");
     
     while (1)
     {
@@ -244,7 +246,7 @@ void *client(void *arg){
             strcat(buffer2,"\n");
             fputs(buffer2,fpoint);
             fclose(fpoint);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             printf("List akun: \n");
             printf("Username | Password\n");
             while((str=fgetc(fpoint))!=EOF) 
@@ -258,7 +260,7 @@ void *client(void *arg){
         {
             char buffer2[1024] = {0};
             valread = read(socketfd , buffer2, 1024);
-            fpoint = fopen("/home/syubban/Desktop/praktikum3/datalogin.txt", "r");
+            fpoint = fopen("/home/iqbaal/Desktop/akun.txt", "r");
             while(fgets(temp, 512, fpoint) != NULL) 
             {
                 if((strstr(temp, buffer2)) != NULL) 
@@ -275,6 +277,7 @@ void *client(void *arg){
             }
             else
             {
+                printf("Auth Failed\n");
                 send(socketfd , "login failed" , strlen("login failed"), 0 );
             }
             fclose(fpoint);
@@ -371,8 +374,7 @@ Source code client:
 
 pthread_t tid[100];
 // tid[0] untuk screen 2
-
-char *create_call_login(char buffer[], int sock, int valread) 
+char* create_call_login(char buffer[], int sock, int valread) 
 {
     char username[200] = {0};
     char password[100] = {0};
@@ -383,11 +385,9 @@ char *create_call_login(char buffer[], int sock, int valread)
     strcat(username, "|");
     strcat(username, password);
 
-    // printf(" username %s",username);
     send(sock , username , strlen(username) , 0 );
     valread = read(sock , buffer, 1024);
     return buffer;
-    printf("%s\n", buffer);
 }
 
 void create_call_register(char buffer[], int sock, int valread) {
@@ -399,16 +399,14 @@ void create_call_register(char buffer[], int sock, int valread) {
     scanf("%s", password);
     strcat(username, "|");
     strcat(username, password);
-
-    // printf(" username %s",username);
     send(sock , username , strlen(username) , 0 );
     valread = read(sock , buffer, 1024);
-    //printf("%s\n", buffer);
+    printf("%s\n", buffer);
 }
 
-void *screen_two(int *ardg){
-    int sock = *(int)ardg;
-    while(1) {
+void *screen_two(void *ardg){
+    int sock = *(int *) ardg;
+        while(1) {
         char strings[1024] = {0}, string2[1024] = {0}, amp;
         printf("1. Find Match\n2. Logout\nChoices : ");
         scanf("%s", string2);
@@ -436,7 +434,7 @@ void *screen_two(int *ardg){
             break;
         }
     }
-    return;
+    
 }
 
 int main() {
@@ -461,23 +459,25 @@ int main() {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
-
-
-    while(1) 
-    {
-        if (connect(sock, (struct sockaddr *)&serv_address, sizeof(serv_address)) < 0) 
+    if (connect(sock, (struct sockaddr *)&serv_address, sizeof(serv_address)) < 0) 
         {
             printf("\nConnection Failed \n");
             return -1;
         }
+    
+
+    while(1) 
+    {   
+        
         char buffer[1024] = {0}, buffer2[1024] = {0};
         printf("1. Login\n2. Register\nChoices : ");
         scanf("%s", buffer2);
         send(sock, buffer2 , strlen(buffer2), 0 );
         if (strcmp(buffer2,"login") == 0)
         {
-            strcpy(buffer, create_call_login(buffer, sock, valread));
-            if (strcmp(buffer, "login success") == 0) {
+           create_call_login(buffer, sock, valread);
+           printf("%s\n", buffer);
+           if (strcmp(buffer, "login success") == 0) {
                 pthread_create(&(tid[0]), NULL, screen_two, &sock);
                 pthread_join(tid[0], NULL);
             }
